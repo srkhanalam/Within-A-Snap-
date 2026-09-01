@@ -1,0 +1,6 @@
+{
+  "name": "Within A Snap",
+  "description": "AI-first e-commerce and dropshipping operating system to find products, evaluate suppliers, launch listings, and automate stores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
