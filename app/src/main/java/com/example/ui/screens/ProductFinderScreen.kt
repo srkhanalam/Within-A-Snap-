@@ -199,6 +199,15 @@ fun ProductFinderScreen(
                         OpportunityScoreBadge(score = product.opportunityScore)
                     }
 
+                    // Clear Product Image
+                    ProductImageCard(
+                        productId = product.id,
+                        productName = product.name,
+                        category = product.category,
+                        height = 140.dp,
+                        showBadge = false
+                    )
+
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),

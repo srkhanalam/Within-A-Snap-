@@ -39,6 +39,7 @@ fun NationalBuyerProductScreen(
     selectedProduct: Product?,
     onSelectProduct: (Product) -> Unit,
     onPlaceOrder: (Order) -> Unit,
+    onAddToCart: ((Product) -> Unit)? = null,
     onSwitchToInternational: () -> Unit,
     onBackToStorefront: () -> Unit,
     modifier: Modifier = Modifier
@@ -57,6 +58,7 @@ fun NationalBuyerProductScreen(
 
     // Checkout BottomSheet & Success Dialog
     var showCheckoutModal by remember { mutableStateOf(false) }
+    var showCartAddedNotification by remember { mutableStateOf(false) }
     var completedOrder by remember { mutableStateOf<Order?>(null) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
@@ -299,6 +301,16 @@ fun NationalBuyerProductScreen(
                         )
                     }
 
+                    // Crystal Clear Product Photo Banner
+                    ProductImageCard(
+                        productId = activeProduct.id,
+                        productName = activeProduct.name,
+                        category = activeProduct.category,
+                        height = 240.dp,
+                        showBadge = true,
+                        badgeText = "🇮🇳 100% GENUINE • EXPRESS DISPATCH"
+                    )
+
                     // National Price Block
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -513,7 +525,8 @@ fun NationalBuyerProductScreen(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                showCheckoutModal = true
+                                onAddToCart?.invoke(activeProduct)
+                                showCartAddedNotification = true
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -1012,6 +1025,36 @@ fun NationalBuyerProductScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = SnapGold, contentColor = Color.Black)
                 ) {
                     Text("Done & Continue Shopping", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    if (showCartAddedNotification) {
+        AlertDialog(
+            onDismissRequest = { showCartAddedNotification = false },
+            icon = { Icon(Icons.Default.ShoppingCartCheckout, contentDescription = null, tint = SnapGold, modifier = Modifier.size(32.dp)) },
+            title = { Text("Added to Cart!", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) },
+            text = {
+                Text(
+                    text = "${activeProduct.name} has been added to your cart. You can continue shopping or proceed to checkout.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCartAddedNotification = false
+                        showCheckoutModal = true
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SnapGold, contentColor = Color.Black)
+                ) {
+                    Text("Proceed to Checkout", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCartAddedNotification = false }) {
+                    Text("Keep Shopping", color = SnapGold)
                 }
             }
         )

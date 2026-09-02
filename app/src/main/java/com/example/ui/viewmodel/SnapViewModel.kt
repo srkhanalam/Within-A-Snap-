@@ -6,6 +6,7 @@ import com.example.data.ai.AgentExecutionResult
 import com.example.data.ai.SpecializedAgents
 import com.example.data.model.*
 import com.example.data.repository.StoreRepository
+import com.example.ui.theme.AppThemePreset
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -29,6 +30,7 @@ enum class AppScreen {
     NATIONAL_BUYER,
     INTERNATIONAL_BUYER,
     BUYER_STOREFRONT,
+    LOCATION_MARKETPLACE,
     ADMIN_LOGIN,
     OWNER_CONSOLE,
     // 7 New Advanced Operations & Growth Suites
@@ -55,6 +57,20 @@ class SnapViewModel(
 
     private val _currentScreen = MutableStateFlow(AppScreen.OVERVIEW)
     val currentScreen: StateFlow<AppScreen> = _currentScreen.asStateFlow()
+
+    private val _selectedThemePreset = MutableStateFlow(AppThemePreset.GOLD_OBSIDIAN)
+    val selectedThemePreset: StateFlow<AppThemePreset> = _selectedThemePreset.asStateFlow()
+
+    fun setThemePreset(preset: AppThemePreset) {
+        _selectedThemePreset.value = preset
+    }
+
+    fun cycleNextTheme() {
+        val presets = AppThemePreset.entries
+        val currentIndex = presets.indexOf(_selectedThemePreset.value)
+        val nextIndex = (currentIndex + 1) % presets.size
+        _selectedThemePreset.value = presets[nextIndex]
+    }
 
     private val _selectedProductForLaunch = MutableStateFlow<Product?>(null)
     val selectedProductForLaunch: StateFlow<Product?> = _selectedProductForLaunch.asStateFlow()
@@ -135,6 +151,22 @@ class SnapViewModel(
     val customerSegments = repository.customerSegments
     val priceSurgeEvents = repository.priceSurgeEvents
     val inventoryGuards = repository.inventoryGuards
+
+    // Location-Based Marketplace StateFlows
+    val userLocations = repository.userLocations
+    val currentUserLocation = repository.currentUserLocation
+
+    fun selectUserLocation(location: UserLocation) {
+        repository.selectUserLocation(location)
+    }
+
+    fun setLocationByPincode(pincode: String, cityName: String = "Custom Region") {
+        repository.setLocationByPincode(pincode, cityName)
+    }
+
+    fun simulateGpsLocationDetection() {
+        repository.simulateGpsLocationDetection()
+    }
 
     // Dynamic metrics
     val totalRevenueUSD = orders.map { list -> list.filter { it.paymentStatus == PaymentStatus.PAID }.sumOf { it.revenueUSD } }

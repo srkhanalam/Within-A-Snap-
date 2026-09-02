@@ -337,6 +337,16 @@ fun BuyerStorefrontScreen(
                         }
                     }
 
+                    // Clear Product Photo
+                    ProductImageCard(
+                        productId = prod.id,
+                        productName = prod.name,
+                        category = prod.category,
+                        height = 160.dp,
+                        showBadge = true,
+                        badgeText = if (isInternationalMode) "🌐 GLOBAL EDITION" else "🇮🇳 DOMESTIC STOCK"
+                    )
+
                     Text(
                         text = prod.name,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -370,17 +380,26 @@ fun BuyerStorefrontScreen(
                             )
                         }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedButton(
+                                onClick = { onDirectAddToCart(prod) },
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                            ) {
+                                Icon(Icons.Default.AddShoppingCart, contentDescription = "Add to Cart", modifier = Modifier.size(15.dp), tint = if (isInternationalMode) SnapCyan else SnapGold)
+                            }
+
                             OutlinedButton(
                                 onClick = {
                                     if (isInternationalMode) onOpenInternationalProduct(prod) else onOpenNationalProduct(prod)
                                 },
                                 shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                                 border = BorderStroke(1.dp, if (isInternationalMode) SnapCyan else SnapGold)
                             ) {
                                 Text(
-                                    text = "View Page",
+                                    text = "Details",
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                     color = if (isInternationalMode) SnapCyan else SnapGold
                                 )
@@ -391,16 +410,16 @@ fun BuyerStorefrontScreen(
                                     if (isInternationalMode) onOpenInternationalProduct(prod) else onOpenNationalProduct(prod)
                                 },
                                 shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isInternationalMode) SnapCyan else SnapGold,
                                     contentColor = Color.Black
                                 )
                             ) {
                                 Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(Modifier.width(4.dp))
+                                Spacer(Modifier.width(2.dp))
                                 Text(
-                                    text = "Buy Now",
+                                    text = "Buy",
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black)
                                 )
                             }

@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.AutomationMode
 import com.example.ui.components.BrandLogoHeader
 import com.example.ui.components.CountryFlagBadge
+import com.example.ui.components.ThemeSelectorDialog
 import com.example.ui.screens.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.AppScreen
@@ -46,7 +47,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            WithinASnapTheme {
+            val themePreset by viewModel.selectedThemePreset.collectAsStateWithLifecycle()
+            WithinASnapTheme(preset = themePreset) {
                 MainAppScaffold(viewModel = viewModel)
             }
         }
@@ -111,10 +113,14 @@ fun MainAppScaffold(
     val customerSegments by viewModel.customerSegments.collectAsStateWithLifecycle()
     val priceSurgeEvents by viewModel.priceSurgeEvents.collectAsStateWithLifecycle()
     val inventoryGuards by viewModel.inventoryGuards.collectAsStateWithLifecycle()
+    val userLocations by viewModel.userLocations.collectAsStateWithLifecycle()
+    val currentUserLocation by viewModel.currentUserLocation.collectAsStateWithLifecycle()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showMarketSelectorDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    val selectedThemePreset by viewModel.selectedThemePreset.collectAsStateWithLifecycle()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -131,20 +137,21 @@ fun MainAppScaffold(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    BrandLogoHeader(compact = false)
+                    BrandLogoHeader(compact = false, showTagline = true, taglineText = "FIND • LAUNCH • SELL")
 
-                    // Owner Profile & Executive Contact Card
+                    // Controls & Preferences Panel: Owner, Market, AI Command & Theme
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(14.dp)),
                         color = Color(0xFF131926),
-                        border = BorderStroke(1.dp, SnapGold.copy(alpha = 0.4f))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // 1. Owner Profile & Executive Contact
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -190,31 +197,7 @@ fun MainAppScaffold(
 
                             Divider(color = Color(0xFF222B3D), modifier = Modifier.padding(vertical = 2.dp))
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Default.Email, contentDescription = null, tint = SnapGold, modifier = Modifier.size(13.dp))
-                                Text(
-                                    text = storeProfile.ownerEmail,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Default.Phone, contentDescription = null, tint = SnapEmerald, modifier = Modifier.size(13.dp))
-                                Text(
-                                    text = storeProfile.ownerPhone,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
-                                    color = SnapEmerald
-                                )
-                            }
-
-                            // Quick Admin Access Button
+                            // 1.1 Owner Console Access Button
                             Button(
                                 onClick = {
                                     if (adminSession.isAuthenticated) {
@@ -224,9 +207,7 @@ fun MainAppScaffold(
                                     }
                                     scope.launch { drawerState.close() }
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 4.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (adminSession.isAuthenticated) SnapGold else Color(0xFF1E2B42),
@@ -241,6 +222,131 @@ fun MainAppScaffold(
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     text = if (adminSession.isAuthenticated) "👑 Owner Deep Console" else "🔐 Admin / Owner Login",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+
+                            // 2. Operating Market Switcher Button
+                            val currentMarket = markets.firstOrNull { it.code == selectedMarketCode } ?: markets.first()
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        showMarketSelectorDialog = true
+                                        scope.launch { drawerState.close() }
+                                    },
+                                color = Color(0xFF182030),
+                                border = BorderStroke(1.dp, SnapCyan.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(text = currentMarket.flag, fontSize = 18.sp)
+                                        Column {
+                                            Text(
+                                                text = "Operating Market",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "${currentMarket.name} (${currentMarket.currencySymbol} ${currentMarket.currencyCode})",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = SnapCyan
+                                            )
+                                        }
+                                    }
+                                    Icon(
+                                        Icons.Default.Tune,
+                                        contentDescription = "Switch Market",
+                                        tint = SnapCyan,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            // 3. AI Command Center Quick Trigger
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        viewModel.navigateTo(AppScreen.COMMAND_CENTER)
+                                        scope.launch { drawerState.close() }
+                                    },
+                                color = Color(0xFF182030),
+                                border = BorderStroke(1.dp, SnapGold.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = "AI Command",
+                                            tint = SnapGold,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Column {
+                                            Text(
+                                                text = "AI Command Center",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = SnapGold
+                                            )
+                                            Text(
+                                                text = "Autonomous Sourcing & Dropship OS",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                    Icon(
+                                        Icons.Default.ArrowForward,
+                                        contentDescription = null,
+                                        tint = SnapGold,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+
+                            // 4. App Theme & Palette Selector Quick Button
+                            OutlinedButton(
+                                onClick = {
+                                    showThemeDialog = true
+                                    scope.launch { drawerState.close() }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Palette,
+                                    contentDescription = "Theme",
+                                    modifier = Modifier.size(15.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = "🎨 Theme: ${selectedThemePreset.displayName}",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
@@ -259,9 +365,10 @@ fun MainAppScaffold(
                     )
 
                     val buyerDrawerItems = listOf(
+                        Triple(AppScreen.LOCATION_MARKETPLACE, "📍 Location-Based Marketplace", Icons.Default.LocationOn),
+                        Triple(AppScreen.BUYER_STOREFRONT, "🛍️ Live Customer Storefront", Icons.Default.Storefront),
                         Triple(AppScreen.NATIONAL_BUYER, "🇮🇳 National Buyer Page (₹)", Icons.Default.ShoppingBag),
-                        Triple(AppScreen.INTERNATIONAL_BUYER, "🌐 Global Buyer Page ($/AED/SAR)", Icons.Default.Public),
-                        Triple(AppScreen.BUYER_STOREFRONT, "🛍️ Live Customer Storefront", Icons.Default.Storefront)
+                        Triple(AppScreen.INTERNATIONAL_BUYER, "🌐 Global Buyer Page ($/AED/SAR)", Icons.Default.Public)
                     )
 
                     buyerDrawerItems.forEach { (screen, title, icon) ->
@@ -309,8 +416,8 @@ fun MainAppScaffold(
                     )
 
                     val drawerItems = listOf(
+                        Triple(AppScreen.OVERVIEW, "🏠 Home", Icons.Default.Home),
                         Triple(AppScreen.OWNER_CONSOLE, "👑 Owner Deep Console", Icons.Default.AdminPanelSettings),
-                        Triple(AppScreen.OVERVIEW, "Daily Brief & Overview", Icons.Default.Dashboard),
                         Triple(AppScreen.COMMAND_CENTER, "AI Command Center", Icons.Default.Hub),
                         Triple(AppScreen.PRODUCT_FINDER, "AI Product Finder", Icons.Default.Search),
                         Triple(AppScreen.LAUNCH_STUDIO, "1-Click Launch Studio", Icons.Default.RocketLaunch),
@@ -325,7 +432,7 @@ fun MainAppScaffold(
                         Triple(AppScreen.COMPETITORS_AB, "Competitor Intel & A/B", Icons.Default.CompareArrows),
                         Triple(AppScreen.ADMIN_LOGIN, "🔐 Admin Security Portal", Icons.Default.Lock),
                         Triple(AppScreen.ONBOARDING, "Store Setup Wizard", Icons.Default.Tune),
-                        Triple(AppScreen.LANDING, "Public Landing Page", Icons.Default.Home)
+                        Triple(AppScreen.LANDING, "Public Landing Page", Icons.Default.Store)
                     )
 
                     drawerItems.forEach { (screen, title, icon) ->
@@ -425,6 +532,8 @@ fun MainAppScaffold(
                         title = {
                             BrandLogoHeader(
                                 compact = true,
+                                showTagline = true,
+                                taglineText = "FIND • LAUNCH • SELL",
                                 onClick = { viewModel.navigateTo(AppScreen.OVERVIEW) }
                             )
                         },
@@ -441,75 +550,7 @@ fun MainAppScaffold(
                             }
                         },
                         actions = {
-                            // Owner Quick Access Crown Button
-                            Surface(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        if (adminSession.isAuthenticated) {
-                                            viewModel.navigateTo(AppScreen.OWNER_CONSOLE)
-                                        } else {
-                                            viewModel.navigateTo(AppScreen.ADMIN_LOGIN)
-                                        }
-                                    }
-                                    .padding(end = 4.dp),
-                                color = if (adminSession.isAuthenticated) SnapGoldContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant,
-                                border = BorderStroke(1.dp, if (adminSession.isAuthenticated) SnapGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.AdminPanelSettings,
-                                        contentDescription = "Owner Console",
-                                        tint = SnapGold,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = if (adminSession.isAuthenticated) "OWNER" else "ADMIN",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black, fontSize = 10.sp),
-                                        color = SnapGold
-                                    )
-                                }
-                            }
-
-                            // Market Flag Switcher Button
-                            Surface(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { showMarketSelectorDialog = true }
-                                    .padding(end = 6.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    val currentMarket = markets.firstOrNull { it.code == selectedMarketCode } ?: markets.first()
-                                    Text(text = currentMarket.flag, fontSize = 14.sp)
-                                    Text(
-                                        text = currentMarket.currencyCode,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = SnapGold
-                                    )
-                                }
-                            }
-
-                            // AI Command Fast Trigger
-                            IconButton(
-                                onClick = { viewModel.navigateTo(AppScreen.COMMAND_CENTER) },
-                                modifier = Modifier.testTag("topbar_ai_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "AI Command Center",
-                                    tint = SnapGold
-                                )
-                            }
+                            // Optional clean quick notification or empty for maximum header spaciousness
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.background
@@ -524,10 +565,10 @@ fun MainAppScaffold(
                         tonalElevation = 6.dp
                     ) {
                         val bottomNavItems = listOf(
-                            Triple(AppScreen.OVERVIEW, "Overview", Icons.Default.Dashboard),
+                            Triple(AppScreen.OVERVIEW, "Home", Icons.Default.Home),
+                            Triple(AppScreen.LOCATION_MARKETPLACE, "Market", Icons.Default.LocationOn),
                             Triple(AppScreen.COMMAND_CENTER, "AI Command", Icons.Default.Hub),
                             Triple(AppScreen.PRODUCT_FINDER, "Winners", Icons.Default.TravelExplore),
-                            Triple(AppScreen.LAUNCH_STUDIO, "Launch", Icons.Default.RocketLaunch),
                             Triple(AppScreen.ORDERS, "Orders", Icons.Default.ShoppingBag)
                         )
 
@@ -720,6 +761,7 @@ fun MainAppScaffold(
                             selectedProduct = selectedBuyerProduct,
                             onSelectProduct = { viewModel.setSelectedBuyerProduct(it) },
                             onPlaceOrder = { viewModel.placeBuyerOrder(it) },
+                            onAddToCart = { viewModel.addToBuyerCart(it) },
                             onSwitchToInternational = { viewModel.navigateTo(AppScreen.INTERNATIONAL_BUYER) },
                             onBackToStorefront = { viewModel.navigateTo(AppScreen.BUYER_STOREFRONT) }
                         )
@@ -731,6 +773,7 @@ fun MainAppScaffold(
                             selectedProduct = selectedBuyerProduct,
                             onSelectProduct = { viewModel.setSelectedBuyerProduct(it) },
                             onPlaceOrder = { viewModel.placeBuyerOrder(it) },
+                            onAddToCart = { viewModel.addToBuyerCart(it) },
                             onSwitchToNational = { viewModel.navigateTo(AppScreen.NATIONAL_BUYER) },
                             onBackToStorefront = { viewModel.navigateTo(AppScreen.BUYER_STOREFRONT) }
                         )
@@ -749,6 +792,26 @@ fun MainAppScaffold(
                                 viewModel.navigateTo(AppScreen.INTERNATIONAL_BUYER)
                             },
                             onDirectAddToCart = { viewModel.addToBuyerCart(it) }
+                        )
+                    }
+
+                    AppScreen.LOCATION_MARKETPLACE -> {
+                        LocationMarketplaceScreen(
+                            products = products,
+                            currentLocation = currentUserLocation,
+                            availableLocations = userLocations,
+                            onSelectLocation = { viewModel.selectUserLocation(it) },
+                            onSetPincode = { pin, city -> viewModel.setLocationByPincode(pin, city) },
+                            onDetectGps = { viewModel.simulateGpsLocationDetection() },
+                            onOpenProductDetail = {
+                                viewModel.setSelectedBuyerProduct(it)
+                                if (currentUserLocation.countryCode == "IN") {
+                                    viewModel.navigateTo(AppScreen.NATIONAL_BUYER)
+                                } else {
+                                    viewModel.navigateTo(AppScreen.INTERNATIONAL_BUYER)
+                                }
+                            },
+                            onAddToCart = { viewModel.addToBuyerCart(it) }
                         )
                     }
 
@@ -901,6 +964,16 @@ fun MainAppScaffold(
                     Text("Done", fontWeight = FontWeight.Bold, color = SnapGold)
                 }
             }
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectorDialog(
+            currentPreset = selectedThemePreset,
+            onPresetSelected = { preset ->
+                viewModel.setThemePreset(preset)
+            },
+            onDismiss = { showThemeDialog = false }
         )
     }
 }

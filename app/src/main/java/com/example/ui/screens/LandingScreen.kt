@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.components.BrandLogoHeader
+import com.example.ui.components.ProductImageCard
 import com.example.ui.theme.*
 
 @Composable
@@ -50,19 +51,9 @@ fun LandingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BrandLogoHeader(compact = true)
+                BrandLogoHeader(compact = false)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(
-                        onClick = onExploreAi,
-                        modifier = Modifier.testTag("landing_nav_explore_ai")
-                    ) {
-                        Text(
-                            text = "Explore AI",
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
                     Button(
                         onClick = onStartFree,
                         colors = ButtonDefaults.buttonColors(
@@ -73,8 +64,9 @@ fun LandingScreen(
                         modifier = Modifier.testTag("landing_nav_start_free")
                     ) {
                         Text(
-                            text = "Dashboard",
-                            fontWeight = FontWeight.Bold
+                            text = "Launch OS",
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = BodoniFontFamily
                         )
                     }
                 }
@@ -236,6 +228,63 @@ fun LandingScreen(
                             color = SnapCyan
                         )
                         Text(text = "Launch Flow", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+
+        // Live Winning Products Spotlight with Clear Photography
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "LIVE WINNING PRODUCTS",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = BodoniFontFamily,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "READY TO LAUNCH",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = SnapGold
+                        )
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        ProductImageCard(
+                            productId = "prod_01",
+                            productName = "Smart Pulse Neck Massager",
+                            category = "Health & Fitness",
+                            height = 130.dp,
+                            badgeText = "🔥 #1 BESTSELLER"
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        ProductImageCard(
+                            productId = "prod_02",
+                            productName = "AuraGlow 4-in-1 Facial Wand",
+                            category = "Beauty & Skincare",
+                            height = 130.dp,
+                            badgeText = "✨ VIRAL BEAUTY"
+                        )
                     }
                 }
             }

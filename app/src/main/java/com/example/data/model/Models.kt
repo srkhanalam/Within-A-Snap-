@@ -701,4 +701,34 @@ data class WarehouseInventoryGuard(
     val status: String // "IN_STOCK", "LOW_STOCK_WARNING", "OUT_OF_STOCK_REROUTED"
 )
 
+// 8. Location-Based Marketplace & Local Hub Fulfillment Models
+data class UserLocation(
+    val id: String,
+    val cityName: String,
+    val stateRegion: String,
+    val countryCode: String,
+    val countryFlag: String,
+    val postalCode: String,
+    val currencyCode: String,
+    val currencySymbol: String,
+    val nearbyHubName: String,
+    val distanceKm: Int,
+    val estimatedDeliveryHours: Int,
+    val expressDeliveryAvailable: Boolean = true,
+    val codAvailable: Boolean = true,
+    val taxRatePct: Double = 18.0,
+    val localStockAvailabilityPct: Int = 95,
+    val localDeliveryCarrier: String = "Express Direct Logistics",
+    val isGpsDetected: Boolean = false
+) {
+    val formattedLocation: String get() = "$cityName, $stateRegion ($postalCode)"
+    val deliveryEtaDescription: String get() = when {
+        estimatedDeliveryHours <= 12 -> "⚡ Same-Day Delivery (within 12 hrs)"
+        estimatedDeliveryHours <= 24 -> "⚡ Next-Day Delivery (${estimatedDeliveryHours} hrs)"
+        estimatedDeliveryHours <= 48 -> "📦 Express Delivery (2 Days)"
+        else -> "🚚 Standard Delivery (${estimatedDeliveryHours / 24} Days)"
+    }
+}
+
+
 

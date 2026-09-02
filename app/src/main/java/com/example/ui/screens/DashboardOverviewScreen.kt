@@ -169,6 +169,54 @@ fun DashboardOverviewScreen(
         // Key Business Metrics Grid (2x2)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Hyper-Local Location-Based Marketplace Quick Tile
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                    border = BorderStroke(1.dp, SnapCyan.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { onNavigate(AppScreen.LOCATION_MARKETPLACE) }
+                        .testTag("home_location_marketplace_banner")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(SnapCyanContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = SnapCyan, modifier = Modifier.size(20.dp))
+                            }
+                            Column {
+                                Text(
+                                    text = "📍 Location-Based Marketplace",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = SnapCyan
+                                )
+                                Text(
+                                    text = "Hyper-local sourcing & fast direct delivery to nearby hubs",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Icon(Icons.Default.ArrowForward, contentDescription = null, tint = SnapCyan, modifier = Modifier.size(16.dp))
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -285,6 +333,15 @@ fun DashboardOverviewScreen(
 
                         OpportunityScoreBadge(score = product.opportunityScore)
                     }
+
+                    // Clear Product Photo
+                    ProductImageCard(
+                        productId = product.id,
+                        productName = product.name,
+                        category = product.category,
+                        height = 150.dp,
+                        showBadge = false
+                    )
 
                     Text(
                         text = product.name,

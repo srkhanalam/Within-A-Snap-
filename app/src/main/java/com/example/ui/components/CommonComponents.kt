@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import androidx.compose.ui.layout.ContentScale
 import com.example.data.model.*
 import com.example.ui.theme.*
 
@@ -34,26 +35,28 @@ import com.example.ui.theme.*
 fun BrandLogoHeader(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    showTagline: Boolean = true,
+    taglineText: String = "FIND • LAUNCH • SELL",
     onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(if (compact) 32.dp else 40.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(if (compact) 34.dp else 42.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .background(
                     Brush.linearGradient(
                         colors = listOf(Color(0xFF1E2433), Color(0xFF0F121A))
                     )
                 )
-                .border(1.dp, SnapGold.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -61,43 +64,148 @@ fun BrandLogoHeader(
                 contentDescription = "Within A Snap Logo",
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(8.dp))
             )
         }
 
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            verticalArrangement = Arrangement.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
-                    text = "WITHIN ",
+                    text = "WITHIN",
                     style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = BodoniFontFamily,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        letterSpacing = 0.6.sp,
+                        fontSize = if (compact) 15.sp else 18.sp
                     ),
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false
                 )
                 Text(
                     text = "A SNAP",
                     style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = BodoniFontFamily,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        letterSpacing = 0.6.sp,
+                        fontSize = if (compact) 15.sp else 18.sp
                     ),
-                    color = SnapGold
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
-            if (!compact) {
+            if (showTagline) {
                 Text(
-                    text = "FIND • LAUNCH • SELL",
+                    text = taglineText,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
+                        fontFamily = BodoniFontFamily,
+                        fontSize = if (compact) 9.sp else 10.5.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp
+                        letterSpacing = 1.2.sp
                     ),
-                    color = SnapGold.copy(alpha = 0.85f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
     }
 }
+
+fun getProductDrawableRes(productId: String, category: String = ""): Int {
+    return when {
+        productId.contains("01") || productId.contains("neck", ignoreCase = true) || productId.contains("spine", ignoreCase = true) -> R.drawable.img_neck_massager
+        productId.contains("02") || productId.contains("glow", ignoreCase = true) || productId.contains("aura", ignoreCase = true) || productId.contains("facial", ignoreCase = true) -> R.drawable.img_facial_wand
+        productId.contains("03") || productId.contains("mag", ignoreCase = true) || productId.contains("charger", ignoreCase = true) -> R.drawable.img_magsafe_charger
+        productId.contains("04") || productId.contains("cushion", ignoreCase = true) || productId.contains("lumbar", ignoreCase = true) || productId.contains("ergo", ignoreCase = true) -> R.drawable.img_lumbar_cushion
+        productId.contains("05") || productId.contains("groom", ignoreCase = true) || productId.contains("pet", ignoreCase = true) || productId.contains("vacuum", ignoreCase = true) -> R.drawable.img_pet_groomer
+        category.contains("Fitness", ignoreCase = true) || category.contains("Health", ignoreCase = true) -> R.drawable.img_neck_massager
+        category.contains("Beauty", ignoreCase = true) || category.contains("Skin", ignoreCase = true) -> R.drawable.img_facial_wand
+        category.contains("Electronic", ignoreCase = true) || category.contains("Tech", ignoreCase = true) -> R.drawable.img_magsafe_charger
+        category.contains("Home", ignoreCase = true) || category.contains("Office", ignoreCase = true) -> R.drawable.img_lumbar_cushion
+        category.contains("Pet", ignoreCase = true) -> R.drawable.img_pet_groomer
+        else -> R.drawable.img_neck_massager
+    }
+}
+
+@Composable
+fun ProductImageCard(
+    productId: String,
+    productName: String,
+    category: String = "",
+    modifier: Modifier = Modifier,
+    height: androidx.compose.ui.unit.Dp = 180.dp,
+    contentScale: ContentScale = ContentScale.Crop,
+    showBadge: Boolean = true,
+    badgeText: String? = null
+) {
+    val drawableRes = getProductDrawableRes(productId, category)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF0F1420))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+    ) {
+        Image(
+            painter = painterResource(id = drawableRes),
+            contentDescription = productName,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = contentScale
+        )
+
+        // Subtle gradient overlay at bottom for contrast
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
+                        startY = 100f
+                    )
+                )
+        )
+
+        if (showBadge) {
+            val label = badgeText ?: when {
+                productId.contains("01") -> "🔥 #1 BESTSELLER"
+                productId.contains("02") -> "✨ VIRAL BEAUTY"
+                productId.contains("03") -> "⚡ 15W FAST CHARGE"
+                productId.contains("04") -> "🪑 ORTHOPEDIC"
+                productId.contains("05") -> "🐾 PET CARE PRO"
+                else -> "⭐ HIGH DEMAND"
+            }
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = Color.Black.copy(alpha = 0.75f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.TopStart)
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 9.sp,
+                        letterSpacing = 0.5.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 fun SnapStatCard(

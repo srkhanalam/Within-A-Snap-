@@ -100,9 +100,65 @@ class StoreRepository {
     private val _isEmergencyAutoFulfillPaused = MutableStateFlow(false)
     val isEmergencyAutoFulfillPaused: StateFlow<Boolean> = _isEmergencyAutoFulfillPaused.asStateFlow()
 
+    // --- LOCATION-BASED MARKETPLACE STATE FLOWS ---
+    private val _userLocations = MutableStateFlow(DemoDataProvider.sampleLocations)
+    val userLocations: StateFlow<List<UserLocation>> = _userLocations.asStateFlow()
+
+    private val _currentUserLocation = MutableStateFlow(DemoDataProvider.sampleLocations.first())
+    val currentUserLocation: StateFlow<UserLocation> = _currentUserLocation.asStateFlow()
+
+    fun selectUserLocation(location: UserLocation) {
+        _currentUserLocation.value = location
+        _selectedMarketCode.value = location.countryCode
+    }
+
+    fun setLocationByPincode(pincode: String, cityName: String = "Custom Region") {
+        val matched = _userLocations.value.firstOrNull { it.postalCode.equals(pincode.trim(), ignoreCase = true) }
+        if (matched != null) {
+            _currentUserLocation.value = matched
+            _selectedMarketCode.value = matched.countryCode
+        } else {
+            val isIndia = pincode.trim().length == 6 && pincode.trim().all { it.isDigit() }
+            val custom = UserLocation(
+                id = "loc_custom_${System.currentTimeMillis()}",
+                cityName = if (cityName.isNotBlank() && cityName != "Custom Region") cityName else if (isIndia) "Local Hub Area" else "International Express Zone",
+                stateRegion = if (isIndia) "Domestic Zone" else "Global Zone",
+                countryCode = if (isIndia) "IN" else _selectedMarketCode.value,
+                countryFlag = if (isIndia) "🇮🇳" else "🌐",
+                postalCode = pincode.trim(),
+                currencyCode = if (isIndia) "INR" else "USD",
+                currencySymbol = if (isIndia) "₹" else "$",
+                nearbyHubName = "Regional High-Speed Dispatch Terminal",
+                distanceKm = 16,
+                estimatedDeliveryHours = 24,
+                expressDeliveryAvailable = true,
+                codAvailable = isIndia,
+                taxRatePct = if (isIndia) 18.0 else 10.0,
+                localStockAvailabilityPct = 94,
+                localDeliveryCarrier = if (isIndia) "Delhivery / Bluedart Air" else "DHL Express Worldwide",
+                isGpsDetected = false
+            )
+            _currentUserLocation.value = custom
+            if (isIndia) _selectedMarketCode.value = "IN"
+        }
+    }
+
+    fun simulateGpsLocationDetection() {
+        val detected = DemoDataProvider.sampleLocations.first().copy(
+            isGpsDetected = true,
+            cityName = "Mumbai (GPS Detected)",
+            nearbyHubName = "Bhiwandi Super Logistics Hub (Direct Geolocation)"
+        )
+        _currentUserLocation.value = detected
+        _selectedMarketCode.value = detected.countryCode
+    }
 
     fun setSelectedMarket(code: String) {
         _selectedMarketCode.value = code
+        val match = _userLocations.value.firstOrNull { it.countryCode == code }
+        if (match != null) {
+            _currentUserLocation.value = match
+        }
     }
 
     fun setOnboardingCompleted(completed: Boolean) {

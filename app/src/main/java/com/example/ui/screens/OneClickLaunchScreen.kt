@@ -123,6 +123,15 @@ fun OneClickLaunchScreen(
                         OpportunityScoreBadge(score = product.opportunityScore)
                     }
 
+                    // Product Photo
+                    ProductImageCard(
+                        productId = product.id,
+                        productName = product.name,
+                        category = product.category,
+                        height = 180.dp,
+                        showBadge = false
+                    )
+
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
